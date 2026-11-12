@@ -36,3 +36,4 @@ Each line of a file in `data/records/` is one task in the [v0.1 record format](.
 - Unlabeled records are still welcome, because they show how cost spreads by model and effort.
 - Include failures and interrupted tasks. Leaving them out would make every model look cheaper than it is.
 - Never submit someone else's logs.
+- Records are published under [CC0 1.0](LICENSE.md), which puts them in the public domain. Opening a pull request means you agree to that.

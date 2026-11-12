@@ -100,3 +100,8 @@ The records don't include embeddings of your prompts either. Embeddings can be i
 - **Code:** the tests use only the standard library. Run them with `python3 -m unittest discover -s tests`. Importers for other agents are especially welcome.
 
 The record format is defined in [`tokencount/schemas/task_record.v0.1.json`](tokencount/schemas/task_record.v0.1.json), and [docs/design.md](docs/design.md) explains why it looks the way it does.
+
+## License
+
+- **Code:** [MIT](LICENSE).
+- **Data in `data/records/`:** [CC0 1.0](data/LICENSE.md), dedicated to the public domain, so researchers and routing tools can reuse it freely.
