@@ -1,16 +1,19 @@
-"""Command line: tokencount report | tasks | label | export | validate."""
+"""Command line: tokencount report | tasks | label | export | submit | login | logout | validate."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Sequence
 
-from . import __version__
+from . import __version__, remote
 from .claude_code import Task, default_log_dirs, load_tasks
+from .policy import check_record, load_policy, screen
 from .pricing import PriceTable
 from .records import CATEGORIES, OUTCOMES, Labels, load_salt, record_id, to_record
 from .report import preview, render_report, render_tasks, summarize
@@ -80,6 +83,10 @@ def cmd_label(args: argparse.Namespace) -> int:
     task = matches[0]
     label = Labels().update(task, outcome=args.outcome, category=args.category, description=args.description)
     print(f"{ids[task.key]}: {json.dumps(label, ensure_ascii=False)}")
+    problems = screen({"task": {"description": label.get("description")}}, load_policy())
+    if problems:
+        print(f"Warning: {'; '.join(problems)}. `tokencount submit` will hold this task back until you "
+              "change the description.", file=sys.stderr)
     return 0
 
 
@@ -111,6 +118,140 @@ def cmd_export(args: argparse.Namespace) -> int:
         where = "stdout"
     note = "WITH prompt text" if args.with_prompt else "without prompt text, file paths or session IDs"
     print(f"Wrote {len(records)} record(s) to {where}, {note}. Read it before you share it.", file=sys.stderr)
+    return 0
+
+
+def _summarize_batch(records: list[dict]) -> str:
+    dates = sorted(r["date"] for r in records)
+    models = Counter(r["primary_model"] for r in records)
+    labeled = sum(1 for r in records if r["outcome"]["label"] != "unknown" or r["task"]["category"])
+    listed = ", ".join(f"{m} ({n})" for m, n in models.most_common(4))
+    if len(models) > 4:
+        listed += ", …"
+    return f"{dates[0]} → {dates[-1]} · {listed} · {labeled} labeled"
+
+
+def cmd_submit(args: argparse.Namespace) -> int:
+    api = remote.api_url(args.api)
+    if not api:
+        print("No API is configured. The public API isn't live yet; pass --api URL or set TOKENCOUNT_API.",
+              file=sys.stderr)
+        return 2
+    tasks = _load(args)
+    salt, labels, schema, policy, prices = load_salt(), Labels(), load_schema(), load_policy(), PriceTable.load()
+    ready: list[tuple[dict, list[str]]] = []
+    blocked: list[tuple[dict, list[str]]] = []
+    for task in tasks:
+        label = labels.get(task)
+        if args.only_labeled and not label:
+            continue
+        try:
+            record = to_record(task, salt, label, include_prompt=args.with_prompt)
+        except ValueError:
+            continue
+        check = check_record(record, policy, prices, schema)
+        (blocked if check.errors else ready).append((record, check.errors or check.flags))
+
+    state = remote.SubmitState()
+    pending = [(r, flags) for r, flags in ready if args.all or not state.is_current(api, r)]
+    github = remote.load_github()
+
+    if pending:
+        records = [r for r, _ in pending]
+        print(f"Ready to send {len(records)} task record(s) to {api}")
+        print(f"  {_summarize_batch(records)}")
+        what = "WITH full prompt text" if args.with_prompt else "no prompt text, file paths or session IDs"
+        print(f"  each holds per-call token counts, model and effort names, the date, duration, tool-call counts "
+              f"and your labels; {what}")
+        print(f"  sending as GitHub @{github['login']} (verified)" if github
+              else "  sending anonymously (unverified); `tokencount login` marks your records as verified")
+    if len(ready) > len(pending):
+        print(f"  {len(ready) - len(pending)} record(s) already sent and unchanged; --all resends them")
+    for record, flags in pending:
+        if flags:
+            print(f"  {record['record_id'][:8]} will be held for review: {'; '.join(flags)}")
+    if blocked:
+        print(f"  {len(blocked)} record(s) not sent because of problems:")
+        for record, errors in blocked[:10]:
+            print(f"    {record['record_id'][:8]}  {'; '.join(errors)}")
+    if not pending:
+        print("Nothing new to send.")
+        return 0
+    if args.dry_run:
+        print("Dry run, nothing sent. The first record would be:")
+        print(json.dumps(pending[0][0], indent=2, ensure_ascii=False))
+        return 0
+    if not args.yes:
+        if not sys.stdin.isatty():
+            print("Add --yes to send without a prompt.", file=sys.stderr)
+            return 2
+        if input("Send these records? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Nothing sent.")
+            return 0
+
+    headers = {"X-Contributor-Key": remote.contributor_key()}
+    if github:
+        headers["Authorization"] = f"Bearer {github['token']}"
+    totals: Counter = Counter()
+    rejected: list[dict] = []
+    for start in range(0, len(pending), remote.BATCH_SIZE):
+        batch = [r for r, _ in pending[start : start + remote.BATCH_SIZE]]
+        try:
+            status, body = remote.post_records(api, batch, headers)
+        except remote.RemoteError as exc:
+            print(exc, file=sys.stderr)
+            return 1
+        if status == 401:
+            print("The API did not accept your GitHub login. Run `tokencount login` again, "
+                  "or `tokencount logout` to send anonymously.", file=sys.stderr)
+            return 1
+        if status == 429:
+            print(body.get("error") or "Daily submission limit reached; try again tomorrow.", file=sys.stderr)
+            return 1
+        if status >= 400 or not isinstance(body.get("results"), list):
+            print(f"The API answered {status}: {body.get('error', body)}", file=sys.stderr)
+            return 1
+        by_id = {r["record_id"]: r for r in batch}
+        for result in body["results"]:
+            outcome = result.get("status")
+            if outcome == "rejected":
+                totals["rejected"] += 1
+                rejected.append(result)
+                continue
+            if outcome == "flagged":
+                totals["held"] += 1
+            else:
+                totals["new" if result.get("new") else "updated"] += 1
+            if result.get("record_id") in by_id:
+                state.mark(api, by_id[result["record_id"]])
+        state.save()
+    print(f"Sent: {totals['new']} new, {totals['updated']} updated, {totals['held']} held for review, "
+          f"{totals['rejected']} rejected.")
+    for result in rejected[:10]:
+        print(f"  {str(result.get('record_id'))[:8]}  {'; '.join(result.get('reasons', []))}")
+    return 0 if not rejected else 1
+
+
+def cmd_login(args: argparse.Namespace) -> int:
+    client_id = remote.github_client_id()
+    if not client_id:
+        print("GitHub login isn't set up yet (the project has no OAuth app). You can still submit anonymously.",
+              file=sys.stderr)
+        return 2
+    try:
+        token, login = remote.device_login(client_id, out=print)
+    except remote.RemoteError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    remote.save_github(token, login)
+    print(f"Logged in as @{login}. Your submissions will be marked verified.")
+    print("The token has no scopes. The API uses it once per submission to read your GitHub user ID and keeps "
+          "only a keyed hash of that ID.")
+    return 0
+
+
+def cmd_logout(args: argparse.Namespace) -> int:
+    print("Logged out." if remote.forget_github() else "You were not logged in.")
     return 0
 
 
@@ -169,6 +310,22 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--with-prompt", action="store_true", help="include full prompt text (off by default)")
     p.set_defaults(func=cmd_export)
 
+    p = sub.add_parser("submit", help="send de-identified records to the shared dataset (asks first)")
+    _add_source_args(p)
+    p.add_argument("--api", help="API base URL (default: $TOKENCOUNT_API or the public API)")
+    p.add_argument("--only-labeled", action="store_true", help="only tasks you have labeled")
+    p.add_argument("--with-prompt", action="store_true", help="include full prompt text (off by default)")
+    p.add_argument("--all", action="store_true", help="resend records that were already sent and are unchanged")
+    p.add_argument("--dry-run", action="store_true", help="show what would be sent, send nothing")
+    p.add_argument("-y", "--yes", action="store_true", help="send without asking for confirmation")
+    p.set_defaults(func=cmd_submit)
+
+    p = sub.add_parser("login", help="verify your submissions with your GitHub account (device flow)")
+    p.set_defaults(func=cmd_login)
+
+    p = sub.add_parser("logout", help="forget the stored GitHub login")
+    p.set_defaults(func=cmd_logout)
+
     p = sub.add_parser("validate", help="check JSONL record files against the schema")
     p.add_argument("files", nargs="+", type=Path)
     p.set_defaults(func=cmd_validate)
@@ -184,4 +341,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.description and len(args.description) > 300:
             print("Keep --description to one line of at most 300 characters.", file=sys.stderr)
             return 2
-    return args.func(args)
+    try:
+        return args.func(args)
+    except BrokenPipeError:
+        # Output was piped into something like `head` that stopped reading; exit quietly.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 1

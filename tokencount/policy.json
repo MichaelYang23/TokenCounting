@@ -1,0 +1,44 @@
+{
+  "version": "2026-11-12",
+  "notes": [
+    "Shared by the CLI (tokencount/policy.py) and the API (server/src/validate.ts): problems surface locally before anything is sent, and the server applies the same rules.",
+    "Patterns must stay within the regular-expression syntax that Python and JavaScript share."
+  ],
+  "limits": {
+    "earliest_date": "2023-01-01",
+    "max_calls_per_task": 5000,
+    "max_context_tokens_per_call": 2000000,
+    "max_output_tokens_per_call": 200000
+  },
+  "flags": {
+    "cost_usd_above": 1000,
+    "turns_above": 2000
+  },
+  "screening": [
+    {
+      "name": "an e-mail address",
+      "fields": ["description", "prompt"],
+      "pattern": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+    },
+    {
+      "name": "a URL",
+      "fields": ["description"],
+      "pattern": "(?:https?|ftp)://\\S+|\\bwww\\.\\S+"
+    },
+    {
+      "name": "a file path",
+      "fields": ["description"],
+      "pattern": "(?:^|[\\s\"'(=])(?:~|/(?:home|Users|root|var|etc|opt|usr|tmp|mnt|srv|private))/\\S*|\\b[A-Za-z]:\\\\\\S+"
+    },
+    {
+      "name": "an API key or token",
+      "fields": ["description", "prompt"],
+      "pattern": "\\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,}|xox[abprs]-[A-Za-z0-9-]{10,}|hf_[A-Za-z0-9]{30,})"
+    },
+    {
+      "name": "a long secret-like string",
+      "fields": ["description", "prompt"],
+      "pattern": "(?=[A-Za-z0-9+/=]*[0-9])(?=[A-Za-z0-9+/=]*[A-Za-z])[A-Za-z0-9+/=]{32,}"
+    }
+  ]
+}

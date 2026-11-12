@@ -2,7 +2,7 @@
 
 Each line of a file in `data/records/` is one task in the [v0.1 record format](../tokencount/schemas/task_record.v0.1.json). Contributions are pull requests that add a file.
 
-This pull-request flow is temporary. A one-command `tokencount submit` that goes through a validating API is planned; see [docs/roadmap.md](../docs/roadmap.md).
+Once the public API is live, contributing will take one command: `tokencount submit`. It previews what it will send, asks before sending, and only sends new or changed records. The API is built (see [server/](../server/README.md)) but not yet deployed. Until it is, use the pull-request steps below.
 
 ## Steps
 

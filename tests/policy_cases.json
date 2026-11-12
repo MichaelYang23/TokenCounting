@@ -1,0 +1,19 @@
+{
+  "notes": "Screening cases shared by tests/test_submit.py and server/test/validate.test.ts, so the CLI and the API agree.",
+  "catch": [
+    ["mail me at jane.doe@example.com", "an e-mail address"],
+    ["see https://intranet.acme.dev/x", "a URL"],
+    ["edit ~/projects/acme/app.py", "a file path"],
+    ["edit /Users/jane/app.py", "a file path"],
+    ["edit C:\\Users\\jane\\app.py", "a file path"],
+    ["key sk-abcdefghijklmnop1234 leaked", "an API key or token"],
+    ["ghp_abcdefghijklmnopqrstuvwxyz0123", "an API key or token"],
+    ["hash 3f2a9c1b7e4d5a6b8c9d0e1f2a3b4c5d6e7f8a9b", "a long secret-like string"]
+  ],
+  "allow": [
+    "add CSV export to a Flask app",
+    "migrate-the-billing-service-from-python3-to-go-1.22",
+    "refactor parse_claude_code_logs_into_tasks_for_v2",
+    "upgrade Next.js and React 19 in the dashboard"
+  ]
+}

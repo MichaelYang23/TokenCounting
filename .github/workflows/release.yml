@@ -1,0 +1,31 @@
+name: release
+
+# Publishes the CLI to PyPI when a tag like v0.2.0 is pushed. Uses PyPI trusted
+# publishing, so no API token is stored. One-time setup on pypi.org: add a
+# pending publisher for project "tokencount", owner MichaelYang23, repository
+# TokenCounting, workflow release.yml, environment pypi.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - name: Tag must match the package version
+        run: |
+          version=$(uv run --no-project --python 3.13 python -c "import tokencount; print(tokencount.__version__)")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $version"; exit 1
+          fi
+      - name: Unit tests
+        run: uv run --no-project --python 3.13 python -m unittest discover -s tests
+      - run: uv build
+      - run: uv publish --trusted-publishing always

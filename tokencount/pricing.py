@@ -106,3 +106,28 @@ class PriceTable:
             "thinking": thinking * r.output / 1e6,
             "web_search": call.web_search_requests * self.web_search_price,
         }
+
+    def record_cost(self, record: dict) -> tuple[float, set[str]]:
+        """USD cost of a schema-v0.1 record's priced calls, and the models without a price."""
+        total, unpriced = 0.0, set()
+        for c in record["calls"]:
+            call = ApiCall(
+                request_id="",
+                model=c["model"],
+                role=c["role"],
+                speed=c["speed"],
+                inference_geo=c["inference_geo"],
+                input_fresh=c["input_fresh"],
+                cache_write_5m=c["cache_write_5m"],
+                cache_write_1h=c["cache_write_1h"],
+                cache_read=c["cache_read"],
+                output=c["output"],
+                thinking=c["thinking"],
+            )
+            cost = self.call_cost(call)
+            if cost is None:
+                unpriced.add(c["model"])
+            else:
+                total += sum(cost.values())
+        total += record["server_tools"]["web_search_requests"] * self.web_search_price
+        return total, unpriced

@@ -122,3 +122,29 @@ def build_projects(root: Path) -> Path:
                    [{"type": "text", "text": "Renamed."}], _usage(100, 0, 50), effort=None),
     ])
     return projects
+
+
+SERVER_FIXTURE = Path(__file__).resolve().parents[1] / "server" / "test" / "fixtures" / "records.jsonl"
+
+
+def demo_records(root: Path) -> list[dict]:
+    """Records exported from the demo projects with a fixed salt; the API tests use these."""
+    from tokencount.claude_code import load_tasks
+    from tokencount.records import to_record
+
+    labels = {"Add a CSV export to the report page": {"outcome": "success", "category": "feature",
+                                                      "description": "add CSV export to a web app"}}
+    tasks = load_tasks([build_projects(root)])
+    return [to_record(t, b"fixture-salt", labels.get(t.prompt_text)) for t in tasks]
+
+
+if __name__ == "__main__":  # python3 tests/fixtures.py  -> rewrite the API test fixture
+    import sys
+    import tempfile
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    with tempfile.TemporaryDirectory() as tmp:
+        lines = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in demo_records(Path(tmp)))
+    SERVER_FIXTURE.parent.mkdir(parents=True, exist_ok=True)
+    SERVER_FIXTURE.write_text(lines, encoding="utf-8")
+    print(f"wrote {SERVER_FIXTURE}")

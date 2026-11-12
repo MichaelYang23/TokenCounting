@@ -8,9 +8,11 @@ Nobody can look up what a task like theirs usually costs on a given model, becau
 
 1. **`tokencount`**, a zero-dependency CLI. It reads the logs your agent already writes and shows the cost per task, where the tokens and money went, and your most expensive tasks. Everything runs locally.
 2. **An open record format** for sharing de-identified, per-task data points: token counts per call, model, effort, turns, tools, and whether the task worked.
-3. **A dataset in this repository**, built from contributed records (see [data/README.md](data/README.md)).
+3. **A shared dataset.** Contributors send records with one command, `tokencount submit`, to a small validating API ([server/](server/README.md)). The published records are released every night under CC0.
 
-Next: a one-command `tokencount submit`, a small validating API, and a website for browsing the data and looking up what tasks like yours cost on each model. Importers for more agents (Codex CLI, Gemini CLI, …) and a paired-run track, where the same task runs on several models, come after that. The plan is in [docs/roadmap.md](docs/roadmap.md).
+**Status (v0.2):** the CLI, the API and the nightly snapshot are built and tested, but the public API isn't deployed yet. Until it is, records are shared by pull request (see [data/README.md](data/README.md)).
+
+**Next:** a website for browsing the data and for looking up what tasks like yours cost on each model, plus importers for more agents (Codex CLI, Gemini CLI, …). The plan is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Quick start
 
@@ -65,7 +67,9 @@ On real agent work the pattern is starker. The two tasks that started this repos
 | `tokencount report` | Cost per task (p10/p50/p90/max) overall and by model × effort, where the tokens and money went, and your most expensive tasks. `--json` for machine-readable output, `--no-prompts` for screenshots. |
 | `tokencount tasks` | Recent tasks with their ids, costs and labels. |
 | `tokencount label <id> --outcome success --category feature --description "add CSV export to a Flask app"` | Record whether a task worked and what it was. Labels are stored locally in `~/.tokencount/labels.json`. |
-| `tokencount export -o mine.jsonl` | Write de-identified records for sharing. `--only-labeled` keeps only the tasks you labeled. |
+| `tokencount export -o mine.jsonl` | Write de-identified records to a file. `--only-labeled` keeps only the tasks you labeled. |
+| `tokencount submit` | Send de-identified records to the shared dataset. It first shows what it will send and holds back any record whose description looks personal or secret, then asks before sending anything. Only new or changed records are sent. `--dry-run` previews without sending. |
+| `tokencount login` / `logout` | Verify your submissions with your GitHub account, using GitHub's device flow. Without logging in, submissions are anonymous and marked unverified. |
 | `tokencount validate mine.jsonl` | Check records against the schema. |
 
 By default the commands read `~/.claude/projects` and `~/.config/claude/projects`. Pass `--path` for another directory or a single session file, and `--since YYYY-MM-DD` to limit the date range.
@@ -81,7 +85,7 @@ A **task** is one prompt you typed plus every model call made until your next pr
 
 ## Privacy
 
-Everything runs on your machine. `export` writes a file, which you read before deciding to share it.
+Everything runs on your machine until you choose to share. `export` writes a file for you to read. `submit` shows what it will send and asks before sending.
 
 | A record contains | A record never contains |
 |---|---|
@@ -97,11 +101,14 @@ The records don't include embeddings of your prompts either. Embeddings can be i
 ## Contributing
 
 - **Data:** see [data/README.md](data/README.md).
-- **Code:** the tests use only the standard library. Run them with `python3 -m unittest discover -s tests`. Importers for other agents are especially welcome.
+- **Code:**
+  - The CLI's tests use only the standard library: run `python3 -m unittest discover -s tests`.
+  - The API's tests need Node 22.18 or newer: run `cd server && npm ci && npm test`.
+  - Importers for other agents are especially welcome.
 
 The record format is defined in [`tokencount/schemas/task_record.v0.1.json`](tokencount/schemas/task_record.v0.1.json), and [docs/design.md](docs/design.md) explains why it looks the way it does.
 
 ## License
 
 - **Code:** [MIT](LICENSE).
-- **Data in `data/records/`:** [CC0 1.0](data/LICENSE.md), dedicated to the public domain, so researchers and routing tools can reuse it freely.
+- **Data** (`data/records/` and the published snapshots): [CC0 1.0](data/LICENSE.md), dedicated to the public domain, so researchers and routing tools can reuse it freely.

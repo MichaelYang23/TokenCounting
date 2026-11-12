@@ -96,11 +96,13 @@ Moderation: statistical outliers are flagged and kept out of published statistic
 
 ## Phases
 
-| Version | Scope | Outcome |
-|---|---|---|
-| v0.2 | PyPI release; `submit` and `login`; API with validation; nightly snapshot | Contributions take one command |
-| v0.3 | Website Browse, Contribute and Methodology pages; dataset download; Codex CLI and Gemini CLI importers | Anyone can see the data; more agents covered |
-| v0.4 | Look up; paired runs (the same task on several models); outcome hints from interruptions and retries to reduce labeling work | The "what will this cost" question gets an answer |
+| Version | Scope | Outcome | Status |
+|---|---|---|---|
+| v0.2 | PyPI release; `submit` and `login`; API with validation; nightly snapshot | Contributions take one command | Built and tested; waiting for the accounts below before it goes live |
+| v0.3 | Website Browse, Contribute and Methodology pages; dataset download; Codex CLI and Gemini CLI importers | Anyone can see the data; more agents covered | Not started |
+| v0.4 | Look up; paired runs (the same task on several models); outcome hints from interruptions and retries to reduce labeling work | The "what will this cost" question gets an answer | Not started |
+
+To take v0.2 live: deploy the API (steps in [server/README.md](../server/README.md#deploy)), then set `DEFAULT_API_URL` and `DEFAULT_GITHUB_CLIENT_ID` in `tokencount/remote.py`, set the repository variable `TOKENCOUNT_API_URL`, and push the tag `v0.2.0` to publish the CLI to PyPI.
 
 ## Needs the project owner
 
