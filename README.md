@@ -10,7 +10,7 @@ Nobody can look up what a task like theirs usually costs on a given model, becau
 2. **An open record format** for sharing de-identified, per-task data points: token counts per call, model, effort, turns, tools, and whether the task worked.
 3. **A dataset in this repository**, built from contributed records (see [data/README.md](data/README.md)).
 
-Planned: importers for more agents (Codex CLI, Gemini CLI, OpenCode, …), a website that shows cost distributions for tasks similar to yours, and a paired-run track where the same task runs on several models. On the website, the similarity search will run in your browser.
+Next: a one-command `tokencount submit`, a small validating API, and a website for browsing the data and looking up what tasks like yours cost on each model. Importers for more agents (Codex CLI, Gemini CLI, …) and a paired-run track, where the same task runs on several models, come after that. The plan is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Quick start
 
