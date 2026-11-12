@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tokencount"
+version = "0.1.0"
+description = "How many tokens (and dollars) do AI agent tasks really take? Reads Claude Code logs locally; exports de-identified per-task data points."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+tokencount = "tokencount.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["tokencount*"]
+
+[tool.setuptools.package-data]
+tokencount = ["prices.json", "schemas/*.json"]

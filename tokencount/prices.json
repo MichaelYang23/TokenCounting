@@ -1,0 +1,131 @@
+{
+  "version": "2026-11-12",
+  "currency": "USD",
+  "unit": "per million tokens",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "notes": [
+    "Standard (non-batch) API list prices. Cache writes cost 1.25x base input with a 5-minute TTL and 2x with a 1-hour TTL. Thinking tokens are counted in output tokens and billed at the output rate.",
+    "Fast-mode cache prices apply the model's cache multipliers to its fast-mode input price, as the pricing page specifies.",
+    "Haiku 5.5 bills a whole request at the long-context rates once its prompt (fresh input + cache writes + cache reads) exceeds 100,000 tokens.",
+    "Entries with \"historical\": true are no longer on the pricing page; they keep their last published list prices so older logs can still be priced."
+  ],
+  "inference_geo_multipliers": {"us": 1.1},
+  "server_tools": {"web_search_per_1000": 10.0},
+  "models": {
+    "claude-fable-5-2": {
+      "name": "Claude Fable 5.2",
+      "standard": {"input": 8, "cache_write_5m": 10, "cache_write_1h": 16, "cache_read": 0.2, "output": 40},
+      "fast": {"input": 16, "cache_write_5m": 20, "cache_write_1h": 32, "cache_read": 0.4, "output": 80}
+    },
+    "claude-mythos-5-2": {
+      "name": "Claude Mythos 5.2",
+      "standard": {"input": 8, "cache_write_5m": 10, "cache_write_1h": 16, "cache_read": 0.2, "output": 40},
+      "fast": {"input": 16, "cache_write_5m": 20, "cache_write_1h": 32, "cache_read": 0.4, "output": 80}
+    },
+    "claude-fable-5-1": {
+      "name": "Claude Fable 5.1",
+      "standard": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 0.25, "output": 50}
+    },
+    "claude-mythos-5-1": {
+      "name": "Claude Mythos 5.1",
+      "standard": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 0.25, "output": 50}
+    },
+    "claude-fable-5": {
+      "name": "Claude Fable 5",
+      "standard": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 1, "output": 50}
+    },
+    "claude-mythos-5": {
+      "name": "Claude Mythos 5",
+      "standard": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 1, "output": 50}
+    },
+    "claude-opus-5-5": {
+      "name": "Claude Opus 5.5",
+      "standard": {"input": 4, "cache_write_5m": 5, "cache_write_1h": 8, "cache_read": 0.2, "output": 20},
+      "fast": {"input": 8, "cache_write_5m": 10, "cache_write_1h": 16, "cache_read": 0.4, "output": 40}
+    },
+    "claude-opus-5": {
+      "name": "Claude Opus 5",
+      "standard": {"input": 5, "cache_write_5m": 6.25, "cache_write_1h": 10, "cache_read": 0.5, "output": 25},
+      "fast": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 1, "output": 50}
+    },
+    "claude-opus-4-8": {
+      "name": "Claude Opus 4.8",
+      "standard": {"input": 5, "cache_write_5m": 6.25, "cache_write_1h": 10, "cache_read": 0.5, "output": 25},
+      "fast": {"input": 10, "cache_write_5m": 12.5, "cache_write_1h": 20, "cache_read": 1, "output": 50}
+    },
+    "claude-opus-4-7": {
+      "name": "Claude Opus 4.7",
+      "standard": {"input": 5, "cache_write_5m": 6.25, "cache_write_1h": 10, "cache_read": 0.5, "output": 25}
+    },
+    "claude-opus-4-6": {
+      "name": "Claude Opus 4.6",
+      "standard": {"input": 5, "cache_write_5m": 6.25, "cache_write_1h": 10, "cache_read": 0.5, "output": 25}
+    },
+    "claude-opus-4-5": {
+      "name": "Claude Opus 4.5",
+      "standard": {"input": 5, "cache_write_5m": 6.25, "cache_write_1h": 10, "cache_read": 0.5, "output": 25}
+    },
+    "claude-opus-4-1": {
+      "name": "Claude Opus 4.1",
+      "standard": {"input": 15, "cache_write_5m": 18.75, "cache_write_1h": 30, "cache_read": 1.5, "output": 75}
+    },
+    "claude-opus-4": {
+      "name": "Claude Opus 4",
+      "standard": {"input": 15, "cache_write_5m": 18.75, "cache_write_1h": 30, "cache_read": 1.5, "output": 75}
+    },
+    "claude-sonnet-5-5": {
+      "name": "Claude Sonnet 5.5",
+      "standard": {"input": 2, "cache_write_5m": 2.5, "cache_write_1h": 4, "cache_read": 0.1, "output": 10}
+    },
+    "claude-sonnet-5": {
+      "name": "Claude Sonnet 5",
+      "standard": {"input": 2, "cache_write_5m": 2.5, "cache_write_1h": 4, "cache_read": 0.2, "output": 10}
+    },
+    "claude-sonnet-4-6": {
+      "name": "Claude Sonnet 4.6",
+      "standard": {"input": 3, "cache_write_5m": 3.75, "cache_write_1h": 6, "cache_read": 0.3, "output": 15}
+    },
+    "claude-sonnet-4-5": {
+      "name": "Claude Sonnet 4.5",
+      "standard": {"input": 3, "cache_write_5m": 3.75, "cache_write_1h": 6, "cache_read": 0.3, "output": 15}
+    },
+    "claude-sonnet-4": {
+      "name": "Claude Sonnet 4",
+      "standard": {"input": 3, "cache_write_5m": 3.75, "cache_write_1h": 6, "cache_read": 0.3, "output": 15}
+    },
+    "claude-haiku-5-5": {
+      "name": "Claude Haiku 5.5",
+      "standard": {"input": 0.1, "cache_write_5m": 0.125, "cache_write_1h": 0.2, "cache_read": 0.01, "output": 0.5},
+      "long_context": {"threshold_tokens": 100000, "input": 0.5, "cache_write_5m": 0.625, "cache_write_1h": 1, "cache_read": 0.05, "output": 2.5}
+    },
+    "claude-haiku-4-5": {
+      "name": "Claude Haiku 4.5",
+      "standard": {"input": 1, "cache_write_5m": 1.25, "cache_write_1h": 2, "cache_read": 0.1, "output": 5}
+    },
+    "claude-3-7-sonnet": {
+      "name": "Claude Sonnet 3.7",
+      "historical": true,
+      "standard": {"input": 3, "cache_write_5m": 3.75, "cache_write_1h": 6, "cache_read": 0.3, "output": 15}
+    },
+    "claude-3-5-sonnet": {
+      "name": "Claude Sonnet 3.5",
+      "historical": true,
+      "standard": {"input": 3, "cache_write_5m": 3.75, "cache_write_1h": 6, "cache_read": 0.3, "output": 15}
+    },
+    "claude-3-5-haiku": {
+      "name": "Claude Haiku 3.5",
+      "historical": true,
+      "standard": {"input": 0.8, "cache_write_5m": 1, "cache_write_1h": 1.6, "cache_read": 0.08, "output": 4}
+    },
+    "claude-3-opus": {
+      "name": "Claude Opus 3",
+      "historical": true,
+      "standard": {"input": 15, "cache_write_5m": 18.75, "cache_write_1h": 30, "cache_read": 1.5, "output": 75}
+    },
+    "claude-3-haiku": {
+      "name": "Claude Haiku 3",
+      "historical": true,
+      "standard": {"input": 0.25, "cache_write_5m": 0.3, "cache_write_1h": 0.5, "cache_read": 0.03, "output": 1.25}
+    }
+  }
+}
