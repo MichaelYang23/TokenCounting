@@ -8,18 +8,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        # 3.9 is the oldest Python we support. Current runner images no longer
+        # carry it, so uv provides every interpreter.
         python-version: ["3.9", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
       - name: Unit tests
-        run: python -m unittest discover -s tests -v
+        run: uv run --no-project --python ${{ matrix.python-version }} python -m unittest discover -s tests -v
       - name: Validate contributed records
         run: |
           shopt -s nullglob
           files=(data/records/*.jsonl)
           if [ ${#files[@]} -eq 0 ]; then echo "No records yet."; exit 0; fi
-          python -m tokencount validate "${files[@]}"
+          uv run --no-project --python ${{ matrix.python-version }} python -m tokencount validate "${files[@]}"
